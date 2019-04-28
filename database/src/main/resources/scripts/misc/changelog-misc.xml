@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="sample-websocket-tag-misc" author="chimauwah">
+        <tagDatabase tag="sample-websocket-misc"/>
+    </changeSet>
+
+    <changeSet id="extensions" author="chimauwah" dbms="postgresql">
+        <sql>
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+        </sql>
+
+        <rollback>
+            <sql>
+                DROP EXTENSION "uuid-ossp";
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="test-schema" author="chimauwah" dbms="postgresql">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS ws_demo AUTHORIZATION demo;
+        </sql>
+
+        <rollback>
+            <sql>
+                DROP SCHEMA IF EXISTS ws_demo;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

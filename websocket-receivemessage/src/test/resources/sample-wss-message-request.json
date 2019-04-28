@@ -1,0 +1,10 @@
+{
+  "requestContext": {
+    "routeKey": "sendMessage",
+    "eventType": "MESSAGE",
+    "stage": "demo",
+    "domainName": "demo.execute-api.us-east-2.amazonaws.com",
+    "connectionId": "Y3LGIfu8iYcCJQw="
+  },
+  "body": "{\"action\":\"sendMessage\",\"message\":\"Hello World!\"}"
+}

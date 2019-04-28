@@ -1,0 +1,140 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    postgresDriverVersion = '42.2.5'
+    liquibaseCoreVersion = '3.6.3'
+    liquibaseGrooveyDslVersion = '2.0.1'
+
+    // Liquibase parameters
+    liquibaseUsername = 'demo'
+    liquibasePassword = 'demo'
+    liquibaseUrl = 'jdbc:postgresql://localhost:5432/demo'
+    liquibaseChangeLogFile = 'scripts/changelog-master.xml'
+    liquibaseTestChangeLogFile = 'scripts/changelog-master-test.xml'
+    liquibaseArgs = ''
+    // Used for rollback task
+    liquibaseTag = ''
+}
+
+// Overwrite parameters is passed in via commandline
+if (project.hasProperty('username')) {
+    liquibaseUsername = project.property('username')
+}
+if (project.hasProperty('password')) {
+    liquibasePassword = project.property('password')
+}
+if (project.hasProperty('url')) {
+    liquibaseUrl = project.property('url')
+}
+if (project.hasProperty('changeLogFile')) {
+    liquibaseChangeLogFile = project.property('changeLogFile')
+}
+if (project.hasProperty('testChangeLogFile')) {
+    liquibaseTestChangeLogFile = project.property('testChangeLogFile')
+}
+// Used for liquibaseCommand task
+if (project.hasProperty('args')) {
+    liquibaseArgs = project.property('args')
+}
+
+if (project.hasProperty('tag')) {
+    liquibaseTag = project.property('tag')
+}
+
+
+dependencies {
+    // Liquibase dependencies to be used by projects that include a submodule
+    compile "org.postgresql:postgresql:$postgresDriverVersion"
+    compile "org.liquibase:liquibase-core:$liquibaseCoreVersion"
+    compile "org.liquibase:liquibase-groovy-dsl:$liquibaseGrooveyDslVersion"
+}
+
+task liquibaseCommand(type: JavaExec, group: 'liquibase') {
+    systemProperties System.getProperties()
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'liquibase.integration.commandline.Main'
+    args = ([
+            "--driver=org.postgresql.Driver",
+            "--changeLogFile=$liquibaseChangeLogFile",
+            "--url=$liquibaseUrl",
+            "--username=$liquibaseUsername",
+            "--password=$liquibasePassword"
+    ] << liquibaseArgs.split(" ")).flatten()
+}
+
+task testUpdate(type: JavaExec, group: 'liquibase') {
+    systemProperties System.getProperties()
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'liquibase.integration.commandline.Main'
+    args = [
+            "--driver=org.postgresql.Driver",
+            "--changeLogFile=$liquibaseTestChangeLogFile",
+            "--url=$liquibaseUrl",
+            "--username=$liquibaseUsername",
+            "--password=$liquibasePassword",
+            "update"
+    ]
+}
+
+task testRollback(type: JavaExec, group: 'liquibase') {
+    systemProperties System.getProperties()
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'liquibase.integration.commandline.Main'
+    args = [
+            "--driver=org.postgresql.Driver",
+            "--changeLogFile=$liquibaseTestChangeLogFile",
+            "--url=$liquibaseUrl",
+            "--username=$liquibaseUsername",
+            "--password=$liquibasePassword",
+            "rollback",
+            "$liquibaseTag"
+    ]
+}
+
+task update(type: JavaExec, group: 'liquibase') {
+    systemProperties System.getProperties()
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'liquibase.integration.commandline.Main'
+    args = [
+            "--driver=org.postgresql.Driver",
+            "--changeLogFile=$liquibaseChangeLogFile",
+            "--url=$liquibaseUrl",
+            "--username=$liquibaseUsername",
+            "--password=$liquibasePassword",
+            "update"
+    ]
+}
+
+task rollback(type: JavaExec, group: 'liquibase') {
+    systemProperties System.getProperties()
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'liquibase.integration.commandline.Main'
+    args = [
+            "--driver=org.postgresql.Driver",
+            "--changeLogFile=$liquibaseChangeLogFile",
+            "--url=$liquibaseUrl",
+            "--username=$liquibaseUsername",
+            "--password=$liquibasePassword",
+            "rollback",
+            "$liquibaseTag"
+    ]
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': "liquibase.integration.commandline.Main",
+                'Bundle-Version': '',
+                'Build-Time': ''
+        )
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

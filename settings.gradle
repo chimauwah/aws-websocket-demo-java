@@ -1,0 +1,8 @@
+rootProject.name = 'aws-websocket-demo-java'
+include 'lambda-shared'
+include 'database'
+include "websocket-connect"
+include "websocket-disconnect"
+include "websocket-error"
+include "websocket-receivemessage"
+include "websocket-backend-sendmessage"

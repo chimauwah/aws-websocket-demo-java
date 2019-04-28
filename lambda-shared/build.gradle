@@ -1,0 +1,62 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE"
+    }
+}
+
+apply plugin: "io.spring.dependency-management"
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+dependencyManagement {
+    imports {
+        mavenBom "software.amazon.awssdk:bom:$awsSdkVersion"
+    }
+}
+
+dependencies {
+    // AWS
+    compile("software.amazon.awssdk:lambda")
+    compile("software.amazon.awssdk:apigatewaymanagementapi:$awsSdkVersion")
+
+    // Database connection pool
+    compile("com.zaxxer:HikariCP:$hikariVersion")
+
+    // Logging
+    compile("com.amazonaws:aws-lambda-java-log4j2:1.1.0")
+
+    // Postgres
+    compile("org.postgresql:postgresql:$postgresDriverVersion")
+
+    // Validation
+    compile("javax.validation:validation-api:$javaxValidationVersion")
+    compile("org.hibernate.validator:hibernate-validator:$hibernateValidatorVersion")
+    compile("javax.el:javax.el-api:$javaxelApiVersion")
+    compile("org.glassfish.web:javax.el:$glassfishVersion")
+
+    // Lombok
+    compileOnly("org.projectlombok:lombok:$lombokVersion")
+    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+}
+
+configurations {
+    testArtifacts.extendsFrom testCompile
+}
+task testJar(type: Jar) {
+    classifier "test"
+    from sourceSets.test.output
+}
+artifacts {
+    testArtifacts testJar
+}
+
+test {
+    useJUnitPlatform()
+}

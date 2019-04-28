@@ -1,0 +1,10 @@
+version: "2.4"
+services:
+  postgres:
+    image: postgres:10.4-alpine
+    environment:
+    - POSTGRES_USER=demo
+    - POSTGRES_PASSWORD=demo
+    ports:
+    - "5432:5432"
+    mem_limit: 256M

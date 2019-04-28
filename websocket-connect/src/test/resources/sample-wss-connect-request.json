@@ -1,0 +1,9 @@
+{
+  "requestContext": {
+    "routeKey": "$connect",
+    "eventType": "CONNECT",
+    "stage": "demo",
+    "domainName": "demo.execute-api.us-east-2.amazonaws.com",
+    "connectionId": "XKVmVfaTiYcCHGA="
+  }
+}

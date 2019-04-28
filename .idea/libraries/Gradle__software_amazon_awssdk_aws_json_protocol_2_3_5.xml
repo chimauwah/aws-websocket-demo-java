@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: software.amazon.awssdk:aws-json-protocol:2.3.5">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/software.amazon.awssdk/aws-json-protocol/2.3.5/c52c1c3ab3c2dea273841b7949b3dd3679d90de/aws-json-protocol-2.3.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/software.amazon.awssdk/aws-json-protocol/2.3.5/aa541c0df968b321e403512e06fa861cdfb5397e/aws-json-protocol-2.3.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
