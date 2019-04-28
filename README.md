@@ -42,7 +42,7 @@ Connect and disconnect and send messages back and forth and verify the Lambdas a
  - `brew install docker-compose`
   
 #### Setup Database
-Database connection configurations are defined by environment variables in [template.yml](../template.yml). 
+Database connection configurations are defined by environment variables in [template.yml](template.yml). 
 The database is seeded by liquibase files in the `database` module.
 
 Start postgres running locally on port `5432`.
@@ -64,7 +64,7 @@ Shutdown database after testing
 - More information can be found [here](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html)
 
 ##### AWS SAM Configuration
-AWS SAM configuration is defined in [template.yml](../template.yml)
+AWS SAM configuration is defined in [template.yml](template.yml)
   
 #### Build and invoke specific Lambda functions
 Run the following commands to build entire project:
