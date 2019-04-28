@@ -28,8 +28,6 @@ Deploy the Lambdas, using [AWS SAM](https://docs.aws.amazon.com/serverless-appli
 Go back to API Gateway and configure the corresponding routes to point to the deployed Lambdas.
 
 ![Alt text](websocket_api_screenshot.png?raw=true)
-
-![Screenshot](websocket_api_screenshot.png)
     
 Connect to the WebSocket API with WebSocket URL using [wscat](https://github.com/websockets/wscat) or a browser library.
 
