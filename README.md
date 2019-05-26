@@ -30,7 +30,9 @@ $ cd terraform
 $ terraform init
 $ terraform apply
 ```
- 
+*You will have to enter the region in which you want the resources deployed and the Connection URL 
+provided with your deployed Websocket API in API Gateway (minus the @connections).*
+
 **NOTE:**
 Charges will incur deploying and using AWS services. Be sure to execute `terraform destroy` to tear down the AWS resources created by Terraform when no longer using.
 
@@ -40,7 +42,8 @@ Go back to API Gateway and configure the corresponding routes to point to the de
     
 Connect to the WebSocket API with WebSocket URL using [wscat](https://github.com/websockets/wscat) or a browser library.
 
-Connect and disconnect and send messages back and forth and verify the Lambdas are being called by checking the Cloudwatch logs.
+Connect, disconnect and send messages back and forth as you normally would with Websockets and verify the Lambdas are being called by checking the Cloudwatch logs.
+You can test the backend send message Lambda in the console by configuring a test event using any valid JSON as input. 
 
 
 ### Testing Lambda Locally
