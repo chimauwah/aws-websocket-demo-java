@@ -49,7 +49,11 @@ public abstract class CustomHandler<T> {
     protected void validateRequest(WSRequest request) throws CustomInvalidRequestException, JsonProcessingException {
         WSRequestContext requestContext = request.getRequestContext();
         if (!isValid(requestContext)) {
-            throw new CustomInvalidRequestException(objectMapper.writeValueAsString(VALIDATOR.validate(requestContext)));
+            ConstraintViolation<WSRequestContext> contextConstraintViolation =
+                    VALIDATOR.validate(requestContext).stream().findFirst().get();
+            contextConstraintViolation.getPropertyPath();
+            throw new CustomInvalidRequestException(String.format("%s %s",
+                    contextConstraintViolation.getPropertyPath(), contextConstraintViolation.getMessage()));
         }
     }
 

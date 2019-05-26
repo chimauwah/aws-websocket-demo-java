@@ -1,59 +1,66 @@
 package com.chimauwah.aws.websocket;
 
-import com.chimauwah.aws.websocket.shared.model.HttpStatusCode;
+
+import com.chimauwah.aws.websocket.shared.datasource.DatasourceResource;
+import com.chimauwah.aws.websocket.shared.exception.CustomException;
+import com.chimauwah.aws.websocket.shared.exception.CustomNotFoundException;
 import com.chimauwah.aws.websocket.shared.model.WSEventType;
 import com.chimauwah.aws.websocket.shared.model.WSRequest;
 import com.chimauwah.aws.websocket.shared.model.WSRequestContext;
 import com.chimauwah.aws.websocket.shared.model.WSResponse;
-import com.chimauwah.aws.websocket.shared.service.WebSocketIntegrationService;
+import com.chimauwah.aws.websocket.shared.service.WebSocketApiClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hibernate.validator.internal.engine.ConstraintViolationImpl;
-import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.validation.ConstraintViolation;
-import java.lang.annotation.ElementType;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
-class WebsocketReceiveMessageHandlerTest {
+class WebSocketBackendSendMessageHandlerTest {
 
     private final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
-    private WebsocketReceiveMessageHandler handler;
+    private WebSocketBackendSendMessageHandler handler;
     private ObjectMapper objectMapper;
     private WSRequest request;
     @Mock
-    private WebSocketIntegrationService service;
+    private DatasourceResource datasourceResource;
+    @Mock
+    private WebSocketApiClient webSocketApiClient;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         environmentVariables.set("PROFILE", "local");
         objectMapper = new ObjectMapper();
-        handler = new WebsocketReceiveMessageHandler();
-        handler.setWebSocketService(service);
+        handler = new WebSocketBackendSendMessageHandler();
+        handler.setWsConnectionUrl("https://ws-api.com/test/@connections");
+        handler.setWebSocketApiClient(webSocketApiClient);
+        handler.setDatasource(datasourceResource);
+
+        Set<String> connectionIds = Set.of("123", "456");
+        when(datasourceResource.getAll()).thenReturn(connectionIds);
 
         WSRequestContext requestContext = WSRequestContext.builder()
                 .connectionId("testConnectId")
                 .domainName("demo.execute-api.eu.west-3.amazonaws.com")
                 .eventType(WSEventType.MESSAGE)
-                .routeKey("$default")
+                .routeKey("sendMessage")
                 .stage("demo")
                 .build();
 
         request = WSRequest.builder()
                 .requestContext(requestContext)
+                .body("{\"action\":\"sendMessage\",\"message\":\"testing is awesome!!\"}")
                 .build();
     }
 
@@ -62,36 +69,25 @@ class WebsocketReceiveMessageHandlerTest {
         WSResponse expectedResponse = new WSResponse(objectMapper.writeValueAsString(Map.entry("success", true)),
                 Collections.singletonMap("Content-Type", "application/json"), 200);
         WSResponse actualResponse = handler.handleRequest(request, null);
-        assertEquals(objectMapper.writeValueAsString(expectedResponse),
-                objectMapper.writeValueAsString(actualResponse));
+        assertEquals(objectMapper.writeValueAsString(expectedResponse), objectMapper.writeValueAsString(actualResponse));
     }
 
     @Test
-    void shouldThrowExceptionBecauseOfInvalidRequest() throws Exception {
-        request.getRequestContext().setConnectionId(null);
-
-        String errMsg = "Invalid Request. connectionId must not be null";
-        ConstraintViolation<?> constraintViolation = ConstraintViolationImpl.forBeanValidation("",
-                new HashMap<>(), new HashMap<>(), "must not be null", WSRequestContext.class,
-                request.getRequestContext(), request.getRequestContext(), null,
-                PathImpl.createPathFromString("connectionId"), null,
-                ElementType.FIELD, null);
-        Set<ConstraintViolation<?>> errors = Set.of(constraintViolation);
-        @SuppressWarnings("unchecked") WSResponse expectedResponse =
-                new WSResponse(errMsg,
-                        Collections.singletonMap("Content-Type", "application/json"), HttpStatusCode.BAD_REQUEST);
+    void shouldReturnError() throws Exception {
+        doThrow(new CustomException("Error message."))
+                .when(webSocketApiClient).pushMessageToClient(any(), any(), any(), any());
+        WSResponse expectedResponse = new WSResponse("Error message.",
+                Collections.singletonMap("Content-Type", "application/json"), 500);
         WSResponse actualResponse = handler.handleRequest(request, null);
         assertEquals(objectMapper.writeValueAsString(expectedResponse), objectMapper.writeValueAsString(actualResponse));
     }
 
     @Test
-    void shouldThrowExceptionBecauseInternalError() throws Exception {
-        WSResponse expectedResponse =
-                new WSResponse("test server error.", Collections.singletonMap("Content-Type",
-                        "application/json"), HttpStatusCode.INTERNAL_SERVER_ERROR);
-        doAnswer(invocation -> {
-            throw new Exception("test server error.");
-        }).when(service).onMessage(any());
+    void shouldReturnSuccessWhenConnectionNoLongerExists() throws Exception {
+        doThrow(new CustomNotFoundException("Not found."))
+                .when(webSocketApiClient).pushMessageToClient(any(), any(), any(), any());
+        WSResponse expectedResponse = new WSResponse(objectMapper.writeValueAsString(Map.entry("success", true)),
+                Collections.singletonMap("Content-Type", "application/json"), 200);
         WSResponse actualResponse = handler.handleRequest(request, null);
         assertEquals(objectMapper.writeValueAsString(expectedResponse), objectMapper.writeValueAsString(actualResponse));
     }

@@ -8,11 +8,12 @@ Globals:
     Timeout: 30
     Environment:
       Variables:
+        PROFILE: local
         DATASOURCE_CLASS:  org.postgresql.Driver
         DATASOURCE_URL: jdbc:postgresql://localhost:5432/demo
         DATASOURCE_USERNAME: demo
         DATASOURCE_PASSWORD: demo
-        WEBSOCKET_CONNECTION_URL: https://4hpwfyvie6.execute-api.us-east-2.amazonaws.com/test/
+        WEBSOCKET_CONNECTION_URL:
 
 Resources:
   WebsocketConnect:

@@ -1,6 +1,6 @@
 package com.chimauwah.aws.websocket;
 
-
+import com.chimauwah.aws.websocket.shared.exception.CustomException;
 import com.chimauwah.aws.websocket.shared.model.HttpStatusCode;
 import com.chimauwah.aws.websocket.shared.model.WSEventType;
 import com.chimauwah.aws.websocket.shared.model.WSRequest;
@@ -8,13 +8,14 @@ import com.chimauwah.aws.websocket.shared.model.WSRequestContext;
 import com.chimauwah.aws.websocket.shared.model.WSResponse;
 import com.chimauwah.aws.websocket.shared.service.WebSocketIntegrationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.util.Collections;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Matchers.any;
@@ -24,18 +25,21 @@ import static org.mockito.Mockito.verify;
 
 class WebsocketErrorHandlerTest {
 
+    private final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
     private WebsocketErrorHandler handler;
-    @Mock
-    private WebSocketIntegrationService service;
-    @Spy
     private ObjectMapper objectMapper;
     private WSRequest request;
+    @Mock
+    private WebSocketIntegrationService service;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         MockitoAnnotations.initMocks(this);
         objectMapper = new ObjectMapper();
-        handler = new WebsocketErrorHandler(service, objectMapper);
+        environmentVariables.set("PROFILE", "local");
+        handler = new WebsocketErrorHandler();
+        handler.setWebSocketService(service);
 
         WSRequestContext requestContext = WSRequestContext.builder()
                 .connectionId("testConnectId")
@@ -52,34 +56,24 @@ class WebsocketErrorHandlerTest {
 
     @Test
     void shouldReturnSuccessWithBadRequestBodyMessage() throws Exception {
-        String message = "Bad request body. Route selection expression does not match any of the known route keys.";
-        WSResponse expectedResponse =
-                new WSResponse(message, Collections.singletonMap("Content-Type",
-                        "application/json"), HttpStatusCode.BAD_REQUEST);
+        WSResponse expectedResponse = new WSResponse(objectMapper.writeValueAsString(Map.entry("success", true)),
+                Collections.singletonMap("Content-Type", "application/json"), 200);
         WSResponse actualResponse = handler.handleRequest(request, null);
+        verify(service, times(1)).onError(any(WSRequest.class), any(CustomException.class));
+        assertEquals(objectMapper.writeValueAsString(expectedResponse),
+                objectMapper.writeValueAsString(actualResponse));
 
-        verify(service, times(1)).onError(any(), any());
-        assertEquals(objectMapper.writeValueAsString(expectedResponse), objectMapper.writeValueAsString(actualResponse));
     }
 
 
     @Test
     void shouldThrowExceptionBecauseOfInvalidRequest() throws Exception {
         request.getRequestContext().setConnectionId(null);
-
-//        String errMsg = "Incorrect Request";
-//        ConstraintViolation<?> constraintViolation = ConstraintViolationImpl.forBeanValidation("",
-//                new HashMap<>(), new HashMap<>(), "must not be null", WSRequestContext.class,
-//                request.getRequestContext(), request.getRequestContext(), null,
-//                PathImpl.createPathFromString("connectionId"), null,
-//                ElementType.FIELD, null);
-//        Set<ConstraintViolation<?>> errors = ImmutableSet.of(constraintViolation);
-//        @SuppressWarnings("unchecked") WSResponse expectedResponse =
-//                new WSResponse(objectMapper.writeValueAsString(new ErrorMessage(errMsg, errors)),
-//                        Collections.singletonMap("Content-Type", "application/json"), HttpStatusCode.SC_BAD_REQUEST);
-//        WSResponse actualResponse = handler.handleRequest(request, null);
-//        verify(service, times(0)).onError(any(), any());
-//        assertEquals(objectMapper.writeValueAsString(expectedResponse), objectMapper.writeValueAsString(actualResponse));
+        WSResponse expectedResponse = new WSResponse("Invalid Request. connectionId must not be null",
+                Collections.singletonMap("Content-Type", "application/json"), 400);
+        WSResponse actualResponse = handler.handleRequest(request, null);
+        verify(service, times(0)).onError(any(), any());
+        assertEquals(objectMapper.writeValueAsString(expectedResponse), objectMapper.writeValueAsString(actualResponse));
     }
 
     @Test

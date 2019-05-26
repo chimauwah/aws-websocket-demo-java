@@ -40,11 +40,6 @@ public class WebSocketApiClient {
     private static final String ERROR_MESSAGE_FORMAT = "Failed to push message to connected client [%s]: %s";
 
     /**
-     * Json array name of cache values
-     */
-    public static final String CONNECTIONS_CACHE_KEY = "connections";
-
-    /**
      * Pushes a message to the connected client using the provided params.
      *
      * @param domainName   URI of the WebSocket API

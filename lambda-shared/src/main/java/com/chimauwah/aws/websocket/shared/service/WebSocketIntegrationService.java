@@ -98,12 +98,12 @@ public class WebSocketIntegrationService {
                 .message(errorMessage)
                 .meta(meta)
                 .build();
-        LOGGER.error(errorMessage);
+        LOGGER.info(errorMessage);
         try {
             // push message to connected client that an error occurred because of unknown action
             apiClient.pushMessageToClient(wsConnectionUrl, requestContext.getConnectionId(), message, objectMapper);
         } catch (CustomException e) {
-            LOGGER.fatal(e.getMessage());
+            LOGGER.warn(e.getMessage());
         }
     }
 
@@ -119,7 +119,7 @@ public class WebSocketIntegrationService {
         HashMap<String, Object> meta = new HashMap<>();
         meta.put("connectionId", requestContext.getConnectionId());
         WSMessage message = WSMessage.builder()
-                .action("echo")
+                .action("ECHO")
                 .message(clientRequest.getBody())
                 .meta(meta)
                 .build();
@@ -128,8 +128,7 @@ public class WebSocketIntegrationService {
             // echoes received message back to connected client
             apiClient.pushMessageToClient(wsConnectionUrl, requestContext.getConnectionId(), message, objectMapper);
         } catch (CustomException e) {
-            LOGGER.fatal(e.getMessage());
+            LOGGER.warn(e.getMessage());
         }
     }
-
 }

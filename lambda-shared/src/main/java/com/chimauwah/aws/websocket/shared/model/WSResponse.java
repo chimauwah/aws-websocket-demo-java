@@ -2,8 +2,6 @@ package com.chimauwah.aws.websocket.shared.model;
 
 import lombok.Getter;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,7 +25,7 @@ public class WSResponse {
     public WSResponse(final String responseBody, final Map<String, String> responseHeaders,
                       final int responseStatusCode) {
         this.body = responseBody;
-        this.headers = Collections.unmodifiableMap(new HashMap<>(responseHeaders));
+        this.headers = responseHeaders;
         this.statusCode = responseStatusCode;
     }
 }

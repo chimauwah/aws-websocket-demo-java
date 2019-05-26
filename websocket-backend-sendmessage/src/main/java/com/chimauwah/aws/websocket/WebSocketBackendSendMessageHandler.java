@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Setter;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Sample handler that pushes a message to a connected client.
@@ -78,7 +78,7 @@ public class WebSocketBackendSendMessageHandler extends CustomHandler<Object> {
                             connectionId, message, objectMapper);
                     LOGGER.info(String.format("Message sent to connection [%s]", connectionId));
                 } catch (CustomNotFoundException cnfe) {
-                    LOGGER.info(String.format("Connection [%s] no longer exists: %s ", connectionId, cnfe.getMessage()));
+                    LOGGER.error(String.format("Connection [%s] no longer exists: %s ", connectionId, cnfe.getMessage()));
                 }
             }
 

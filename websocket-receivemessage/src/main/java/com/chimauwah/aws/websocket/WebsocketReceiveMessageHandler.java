@@ -9,7 +9,6 @@ import com.chimauwah.aws.websocket.shared.model.WSRequest;
 import com.chimauwah.aws.websocket.shared.model.WSResponse;
 import com.chimauwah.aws.websocket.shared.service.WebSocketIntegrationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Setter;
 import org.apache.logging.log4j.Logger;
 
@@ -25,23 +24,11 @@ public class WebsocketReceiveMessageHandler extends CustomHandler<WSRequest> {
     private ObjectMapper objectMapper;
 
     /**
-     * Creates a {@link WebsocketReceiveMessageHandler} and initializes aa object mapper
+     * Creates a {@link WebsocketReceiveMessageHandler} and initializes global variables
      */
     public WebsocketReceiveMessageHandler() {
         this.webSocketService = new WebSocketIntegrationService();
-        this.objectMapper = new ObjectMapper()
-                .enable(SerializationFeature.INDENT_OUTPUT);
-    }
-
-    /**
-     * For testing with mocks
-     *
-     * @param webSocketService mock service for websocket
-     * @param objectMapper     mock object mapper
-     */
-    public WebsocketReceiveMessageHandler(WebSocketIntegrationService webSocketService, ObjectMapper objectMapper) {
-        this.webSocketService = webSocketService;
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
