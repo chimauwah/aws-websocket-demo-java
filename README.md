@@ -1,10 +1,8 @@
 # Serverless AWS Websocket Demo for Java
 
-As clients connect and disconnect to a WebSocket API in AWS API Gateway, and messages get sent back and forth between 
-server and client, associated routes which describe how API Gateway should handle client request are called and these 
-routes can be configured to invoke an AWS Lambda. These are these Lambdas, written in Java... FINALLY! 
+This project demonstrates how to write and integrate AWS Lambda functions in Java with the WebSocket API in AWS API Gateway. 
+The demos serve as a starting point for users looking to build serverless applications with AWS WebSocket API, AWS Lambda and Java. 
 
-  
 ### Usage
 
 #### Prerequisites
@@ -17,93 +15,141 @@ routes can be configured to invoke an AWS Lambda. These are these Lambdas, writt
 You will need to have a deployed WebSocket API. More information can be found at: https://aws.amazon.com/blogs/compute/announcing-websocket-apis-in-amazon-api-gateway/
 
 #### Getting Started
-After deploying, grab the WebSocket Connection URL *(minus the @connections)* and set it as the ``WEBSOCKET_CONNECTION_URL`` environment variable in the [template.yml](../template.yml). 
+This code expects that you have AWS credentials set up per: 
+http://docs.aws.amazon.com/java-sdk/latest/developer-guide/setup-credentials.html
 
 Build
-- `./gradlew clean build`
-- `./gradlew buildZip`
+```
+$ ./gradlew clean build 
+$ ./gradlew buildZip
+```
 
-Deploy the Lambdas, using [AWS SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-reference.html), [Terraform](https://seanmcgary.com/posts/how-to-deploy-an-aws-lambda-with-terraform/), or manually.
+Deploy the AWS resources using [Terraform](https://seanmcgary.com/posts/how-to-deploy-an-aws-lambda-with-terraform/)
+```
+$ cd terraform
+$ terraform init
+$ terraform apply
+```
  
+**NOTE:**
+Charges will incur deploying and using AWS services. Be sure to execute `terraform destroy` to tear down the AWS resources created by Terraform when no longer using.
+
 Go back to API Gateway and configure the corresponding routes to point to the deployed Lambdas.
 
 ![Alt text](websocket_api_screenshot.png?raw=true)
     
 Connect to the WebSocket API with WebSocket URL using [wscat](https://github.com/websockets/wscat) or a browser library.
 
-Connect and disconnect and send messages back and forth and verify the Lambdas are being called by checking the logs.
+Connect and disconnect and send messages back and forth and verify the Lambdas are being called by checking the Cloudwatch logs.
 
 
 ### Testing Lambda Locally
 
 #### Install Docker
- - `brew cask install docker`
- - Start the docker daemon by opening `Docker` from your Applications folder
- - `brew install docker-compose`
+ ```
+$ brew cask install docker
+ ```
+Start the docker daemon by opening `Docker` from your Applications folder
+```
+$ brew install docker-compose
+```
   
 #### Setup Database
 Database connection configurations are defined by environment variables in [template.yml](template.yml). 
 The database is seeded by liquibase files in the `database` module.
 
-Start postgres running locally on port `5432`.
+The following commands will start postgres running locally on port `5432` and create the demo database, the ws_demo 
+schema, and the connections table with one sample record.
 ```
-./gradlew startDB
+$ ./gradlew startDB
 ```
 Load demo schema and sample data into running Postgres database
 ```
-./gradlew loadSchema
+$ ./gradlew loadSchema
 ```
 Shutdown database after testing
 ```
-./gradlew stopDB
+$ ./gradlew stopDB
 ```
 
 #### Install [AWS SAM CLI](https://github.com/awslabs/aws-sam-cli)  
-- `brew tap aws/tap`
-- `brew install aws-sam-cli`
-- More information can be found [here](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html)
+```
+$ brew tap aws/tap
+$ brew install aws-sam-cli
+```
+More information on how to use SAM to package, deploy, and describe your application can be found [here](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html).
 
 ##### AWS SAM Configuration
-AWS SAM configuration is defined in [template.yml](template.yml)
+AWS SAM configuration is defined in [template.yml](template.yml). Take the Connection URL from the deployed Websocket API 
+in API Gateway and set the value *(minus the @connections)* as the ``WEBSOCKET_CONNECTION_URL`` environment variable in the [template.yml](../template.yml). 
   
 #### Build and invoke specific Lambda functions
 Run the following commands to build entire project:
-- `./gradlew clean build`
-- `./gradlew buildZip`
+```
+$ ./gradlew clean build
+$ ./gradlew buildZip`
+```
 
 Invoke each specific Lambda function locally::
 
-###### Connect Lambda
-- `sam local invoke "WebsocketConnect" -e websocket-connect/src/test/resources/sample-wss-connect-request.json --skip-pull-image --docker-network host`
+##### Connect Lambda
+```
+$ sam local invoke "WebsocketConnect" \ 
+      -e websocket-connect/src/test/resources/sample-wss-connect-request.json \
+      --skip-pull-image \
+      --docker-network host
+```     
 
-Check the `Connections` database table for the persisted connection id. Change the value in the sample request file to test different connection ids.
+Check the `connections` database table for the persisted connection id. 
+Change the value in the sample request file to test with different connection ids.
 
 
-###### Disconnect Lambda
-- `sam local invoke "WebsocketDisconnect" -e websocket-disconnect/src/test/resources/sample-wss-disconnect-request.json --skip-pull-image --docker-network host`
+##### Disconnect Lambda
+```
+$ sam local invoke "WebsocketDisconnect" \
+      -e websocket-disconnect/src/test/resources/sample-wss-disconnect-request.json \
+      --skip-pull-image \
+      --docker-network host
+```
 
-Check the `Connections` database table to see the previously saved connection id has been deleted. 
+Check the `connections` database table to see the previously saved connection id has been deleted. 
 
 
-###### Error Lambda
-- `sam local invoke "WebsocketError" -e websocket-error/src/test/resources/sample-wss-error-request.json --skip-pull-image --docker-network host`
+##### Error Lambda
+```
+$ sam local invoke "WebsocketError" \
+      -e websocket-error/src/test/resources/sample-wss-error-request.json \
+      --skip-pull-image \
+      --docker-network host
+```
 
-Should see `error` log message indicating message not sent because of invalid route key.
+Should see `info` log message indicating message not sent because of invalid route key.
 
-NOTE: May see `fatal` log message because function attempts to push message to connected client using sample connection id. 
-Connect a client to the WebSocket API, obtain connection id, update the sample request, and run command again to see message pushed to client.
+**NOTE:** May also see `warn` log message because function attempts to push message to connected client using sample connection details. 
+Connect a client to the WebSocket API, update the sample request with the stage, domain name and connection id from the logs, 
+and run the command again to see message pushed to client.
 
-###### Receive Message Lambda
-- `sam local invoke "WebsocketReceiveMessage" -e websocket-receivemessage/src/test/resources/sample-wss-message-request.json --skip-pull-image --docker-network host`
+##### Receive Message Lambda
+```
+$ sam local invoke "WebsocketReceiveMessage" \
+    -e websocket-receivemessage/src/test/resources/sample-wss-message-request.json \
+    --skip-pull-image \
+    --docker-network host
+```    
 
 Should see `info` log message indicating message was successfully received.
 
-NOTE: May also see `fatal` log message because function attempts to push message to connected client using sample connection id. 
-Connect a client to the WebSocket API, obtain connection id, update the sample request, and run command again to see message pushed to client.
+**NOTE:** May also see `warn` log message because function attempts to push message to connected client using sample connection details. 
+Connect a client to the WebSocket API, update the sample request with the stage, domain name and connection id from the logs,
+and run the command again to see message pushed to client.
 
-###### Backend Send Message Lambda
-- `echo '""' | sam local invoke "WebsocketBackendSendMessage" --skip-pull-image --docker-network host`
-- The input can be anything since it is ignored in this sample. Just needs to be valid JSON. 
+##### Backend Send Message Lambda
+```
+$ echo '""' | sam local invoke "WebsocketBackendSendMessage" \
+  --skip-pull-image \
+  --docker-network host
+```
+The input can be anything since it is ignored in this sample. Just needs to be valid JSON. 
 
-NOTE: May see `fatal` log message because function attempts to push message to connected client using sample connection id. 
-Connect a client to the WebSocket API, obtain connection id, update the `Connections` database table, and run command again to see message pushed to client.
+**NOTE:** May see `error` log message and failure response because function attempts to push message to connected client using sample connection id. 
+Connect a client to the WebSocket API, update the `Connections` database table with connection id from the logs, and run command again to see message pushed to client.
