@@ -1,4 +1,3 @@
-// Copyright (c) 2019 Shutterfly. All rights reserved.
 package com.chimauwah.aws.websocket.shared.datasource;
 
 import java.sql.Connection;
