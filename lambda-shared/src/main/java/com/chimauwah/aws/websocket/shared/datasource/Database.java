@@ -1,4 +1,4 @@
-package com.chimauwah.aws.websocket.shared.db;
+package com.chimauwah.aws.websocket.shared.datasource;
 
 import com.chimauwah.aws.websocket.shared.config.Configuration;
 import com.chimauwah.aws.websocket.shared.config.ConfigurationHolder;

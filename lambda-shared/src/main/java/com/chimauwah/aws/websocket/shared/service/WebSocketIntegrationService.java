@@ -1,6 +1,8 @@
 package com.chimauwah.aws.websocket.shared.service;
 
-import com.chimauwah.aws.websocket.shared.dao.ConnectionsDao;
+import com.chimauwah.aws.websocket.shared.datasource.DatasourceResource;
+import com.chimauwah.aws.websocket.shared.datasource.DynamoDbResource;
+import com.chimauwah.aws.websocket.shared.datasource.PostgresDbResource;
 import com.chimauwah.aws.websocket.shared.exception.CustomException;
 import com.chimauwah.aws.websocket.shared.logging.CustomLoggerFactory;
 import com.chimauwah.aws.websocket.shared.model.WSMessage;
@@ -21,33 +23,27 @@ public class WebSocketIntegrationService {
 
     private static final String WEBSOCKET_CONNECTION_URL_KEY = "WEBSOCKET_CONNECTION_URL";
 
+    private DatasourceResource datasource;
     private WebSocketApiClient apiClient;
-    private ConnectionsDao connectionsDao;
     private ObjectMapper objectMapper;
 
     private String wsConnectionUrl;
+    private boolean usePostgres = "local".equalsIgnoreCase(System.getenv("PROFILE"));
 
     /**
      * Creates a {@link WebSocketIntegrationService} and initializes dependencies.
      */
     public WebSocketIntegrationService() {
         this.apiClient = new WebSocketApiClient();
-        this.connectionsDao = new ConnectionsDao();
+        if (usePostgres) {
+            this.datasource = new PostgresDbResource();
+        } else {
+            this.datasource = new DynamoDbResource();
+        }
         this.objectMapper = new ObjectMapper()
                 .enable(SerializationFeature.INDENT_OUTPUT);
 
         wsConnectionUrl = System.getenv(WEBSOCKET_CONNECTION_URL_KEY);
-    }
-
-    /**
-     * Testing constructor
-     *
-     * @param apiClient the websocket api client mock
-     */
-    WebSocketIntegrationService(WebSocketApiClient apiClient) {
-        this.apiClient = apiClient;
-        this.objectMapper = new ObjectMapper()
-                .enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     /**
@@ -59,8 +55,8 @@ public class WebSocketIntegrationService {
     public void onConnect(WSRequest clientRequest) {
         String connectionId = clientRequest.getRequestContext().getConnectionId();
         try {
-            connectionsDao.insert(connectionId);
-            LOGGER.info(String.format("[%s] successfully connected and stored in database.", connectionId));
+            datasource.insert(connectionId);
+            LOGGER.info(String.format("[%s] successfully connected and stored in datastore.", connectionId));
         } catch (Exception e) {
             String error = String.format("Error storing connection id [%s]: %s", connectionId, e.getMessage());
             LOGGER.error(error);
@@ -76,8 +72,8 @@ public class WebSocketIntegrationService {
     public void onDisconnect(WSRequest clientRequest) {
         String connectionId = clientRequest.getRequestContext().getConnectionId();
         try {
-            connectionsDao.delete(connectionId);
-            LOGGER.info(String.format("[%s] successfully disconnected and deleted from database.", connectionId));
+            datasource.delete(connectionId);
+            LOGGER.info(String.format("[%s] successfully disconnected and deleted from datastore.", connectionId));
         } catch (Exception e) {
             String error = String.format("Error deleting connection id [%s]: %s", connectionId, e.getMessage());
             LOGGER.error(error);

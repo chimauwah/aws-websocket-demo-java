@@ -1,7 +1,9 @@
 package com.chimauwah.aws.websocket;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.chimauwah.aws.websocket.shared.dao.ConnectionsDao;
+import com.chimauwah.aws.websocket.shared.datasource.DatasourceResource;
+import com.chimauwah.aws.websocket.shared.datasource.DynamoDbResource;
+import com.chimauwah.aws.websocket.shared.datasource.PostgresDbResource;
 import com.chimauwah.aws.websocket.shared.exception.CustomNotFoundException;
 import com.chimauwah.aws.websocket.shared.handler.CustomHandler;
 import com.chimauwah.aws.websocket.shared.logging.CustomLoggerFactory;
@@ -27,32 +29,27 @@ public class WebSocketBackendSendMessageHandler extends CustomHandler<Object> {
 
     @Setter
     private WebSocketApiClient webSocketApiClient;
-    private ConnectionsDao connectionsDao;
+    @Setter
+    private DatasourceResource datasource;
     private ObjectMapper objectMapper;
 
+    @Setter
     private String wsConnectionUrl;
+    private boolean usePostgres = "local".equalsIgnoreCase(System.getenv("PROFILE"));
 
     /**
-     * Initializes {@link WebSocketBackendSendMessageHandler}, {@link WebSocketApiClient}, Jedis and object mapper
+     * Initializes {@link WebSocketBackendSendMessageHandler} and global variables
      */
     public WebSocketBackendSendMessageHandler() {
         this.webSocketApiClient = new WebSocketApiClient();
-        this.connectionsDao = new ConnectionsDao();
+        if (usePostgres) {
+            this.datasource = new PostgresDbResource();
+        } else {
+            this.datasource = new DynamoDbResource();
+        }
         this.objectMapper = new ObjectMapper();
 
         wsConnectionUrl = System.getenv(WEBSOCKET_CONNECTION_URL_KEY);
-    }
-
-    /**
-     * For testing with mocks
-     *
-     * @param webSocketApiClient mock service for websocket
-     * @param objectMapper       mock object mapper
-     */
-    public WebSocketBackendSendMessageHandler(WebSocketApiClient webSocketApiClient,
-                                              ObjectMapper objectMapper) {
-        this.webSocketApiClient = webSocketApiClient;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -60,11 +57,11 @@ public class WebSocketBackendSendMessageHandler extends CustomHandler<Object> {
         try {
             LOGGER.info("Input Request: " + objectMapper.writeValueAsString(request));
 
-            // retrieve all connection ids in db
-            List<String> connectionIds = connectionsDao.getAll();
+            // retrieve all connection ids in datastore
+            Set<String> connectionIds = datasource.getAll();
 
             // an action understood by client to perform
-            String action = "RELOAD_DATA";
+            String action = "TAKE_ACTION";
             // message body to send to client
             String body = "nothing really to say";
 

@@ -1,21 +1,21 @@
-package com.chimauwah.aws.websocket.shared.dao;
-
-import com.chimauwah.aws.websocket.shared.db.Database;
+// Copyright (c) 2019 Shutterfly. All rights reserved.
+package com.chimauwah.aws.websocket.shared.datasource;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Data Access Object for database queries.
  */
-public class ConnectionsDao {
+public class PostgresDbResource implements DatasourceResource {
 
-    public List<String> getAll() throws SQLException {
-        List<String> connections = new ArrayList<>();
+    @Override
+    public Set<String> getAll() throws Exception {
+        Set<String> connections = new HashSet<>();
         String query = "SELECT connection_id FROM ws_demo.connections";
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -27,7 +27,8 @@ public class ConnectionsDao {
         return connections;
     }
 
-    public void insert(String connectionId) throws SQLException {
+    @Override
+    public void insert(String connectionId) throws Exception {
         String query = "INSERT INTO ws_demo.connections (connection_id) VALUES (?)";
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -36,7 +37,8 @@ public class ConnectionsDao {
         }
     }
 
-    public void delete(String connectionId) throws SQLException {
+    @Override
+    public void delete(String connectionId) throws Exception {
         String query = "DELETE FROM ws_demo.connections WHERE connection_id = ?";
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -55,3 +57,4 @@ public class ConnectionsDao {
         return Database.connection();
     }
 }
+

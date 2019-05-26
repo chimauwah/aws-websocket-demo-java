@@ -24,6 +24,7 @@ dependencies {
     // AWS
     compile("software.amazon.awssdk:lambda")
     compile("software.amazon.awssdk:apigatewaymanagementapi:$awsSdkVersion")
+    compile("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
     // Database connection pool
     compile("com.zaxxer:HikariCP:$hikariVersion")
