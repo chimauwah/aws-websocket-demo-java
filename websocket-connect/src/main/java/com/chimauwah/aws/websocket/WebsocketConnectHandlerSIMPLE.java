@@ -20,12 +20,12 @@ public class WebsocketConnectHandlerSIMPLE extends CustomHandler<WSRequest> {
     @Override
     public WSResponse handleRequest(WSRequest request, Context context) {
         WSRequestContext requestContext = request.getRequestContext();
-        if (!isValid(requestContext)) {
-            return new WSResponse("Désolé", APPLICATION_JSON,
-                    400);
-        }
-        String connectionId = requestContext.getConnectionId();
-        // TODO: store connection id in database table
+//        if (!isValid(requestContext)) {
+//            return new WSResponse("Désolé", APPLICATION_JSON,
+//                    400);
+//        }
+//        String connectionId = requestContext.getConnectionId();
+//        // TODO: store connection id in database table
         return new WSResponse("Bonjour le monde", APPLICATION_JSON,
                 200);
     }

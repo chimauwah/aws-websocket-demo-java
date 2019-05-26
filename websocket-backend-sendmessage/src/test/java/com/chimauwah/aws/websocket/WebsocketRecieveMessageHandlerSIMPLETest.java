@@ -43,20 +43,19 @@ class WebsocketRecieveMessageHandlerSIMPLETest {
     @Test
     void shouldReturnSuccess() throws Exception {
         WSResponse expectedResponse = new WSResponse("",
-                Collections.singletonMap("Content-Type",
-                        "application/json"), 200);
+                Collections.emptyMap(), 200);
         WSResponse actualResponse = handler.handleRequest(request, null);
         assertEquals(objectMapper.writeValueAsString(expectedResponse), objectMapper.writeValueAsString(actualResponse));
     }
 
     @Test
     void shouldThrowExceptionBecauseOfInvalidRequest() throws Exception {
-        request.getRequestContext().setConnectionId(null);
-
-        String errMsg = "Incorrect Request";
+//        request.getRequestContext().setConnectionId(null);
+//
+//        String errMsg = "Incorrect Request";
 //        @SuppressWarnings("unchecked") WSResponse expectedResponse =
-//                new WSResponse<>(objectMapper.writeValueAsString(new ErrorMessage(errMsg, errors)),
-//                        Collections.singletonMap("Content-Type", "application/json"), HttpStatusCode.SC_BAD_REQUEST);
+//                new WSResponse(objectMapper.writeValueAsString(new Errors.ErrorMessage(errMsg, null)),
+//                        Collections.singletonMap("Content-Type", "application/json"), HttpStatusCode.BAD_REQUEST);
 //        WSResponse actualResponse = handler.handleRequest(request, null);
 //        assertEquals(objectMapper.writeValueAsString(expectedResponse), objectMapper.writeValueAsString(actualResponse));
     }
